@@ -3,11 +3,12 @@ import { debugDraw } from "../utils/debug";
 import { createLizardAnims } from "../anims/EnemyAnims";
 import { createCharacterAnims } from "../anims/CharacterAnims";
 import Lizard from "../enemies/Lizard";
-import '../characters/Faune'
+import "../characters/Faune";
 import Faune from "../characters/Faune";
+import { sceneEvents } from "../events/EventCenter";
 export default class Game extends Phaser.Scene {
   private cursors!: Phaser.Types.Input.Keyboard.CursorKeys;
-  private faune!: Faune
+  private faune!: Faune;
 
   private hit = 0;
   constructor() {
@@ -19,6 +20,7 @@ export default class Game extends Phaser.Scene {
   }
 
   create() {
+    this.scene.run("game-ui");
     createLizardAnims(this.anims);
     createCharacterAnims(this.anims);
     const map = this.make.tilemap({ key: "dungeon" });
@@ -29,10 +31,7 @@ export default class Game extends Phaser.Scene {
     wallsLayer.setCollisionByProperty({ collides: true });
 
     debugDraw(wallsLayer, this);
-    this.faune = this.add.faune(128,128,'faune')
-    // this.faune = this.physics.add.sprite(128, 128, "faune", "walk-down-3.png");
-    // this.faune.body.setSize(this.faune.width * 0.5, this.faune.height * 0.8);
-    // this.faune.anims.play("faune-idle-down");
+    this.faune = this.add.faune(128, 128, "faune");
     this.cameras.main.startFollow(this.faune, true);
 
     const lizards = this.physics.add.group({
@@ -65,7 +64,10 @@ export default class Game extends Phaser.Scene {
     const dy = this.faune.y - lizard.y;
 
     const dir = new Phaser.Math.Vector2(dx, dy).normalize().scale(200);
-    this.faune.handleDamage(dir)
+    this.faune.handleDamage(dir);
+
+    //probably change this to enum/const
+    sceneEvents.emit("player-health-changed", this.faune.health);
   }
 
   update(t: number, dt: number) {
@@ -76,10 +78,8 @@ export default class Game extends Phaser.Scene {
       }
       return;
     }
-    if(this.faune){
-      this.faune.update(this.cursors)
+    if (this.faune) {
+      this.faune.update(this.cursors);
     }
-   
   }
 }
-
