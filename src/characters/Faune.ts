@@ -47,7 +47,7 @@ export default class Faune extends Phaser.Physics.Arcade.Sprite {
 
     if(this._health <= 0){
       this.healthState = HealthState.DEAD
-      this.play('fauna-faint')
+      this.anims.play('faune-faint')
     }else{
       this.setVelocity(dir.x, dir.y);
       this.setTint(0xff0000);
@@ -73,7 +73,7 @@ export default class Faune extends Phaser.Physics.Arcade.Sprite {
   }
 
   update(cursors: Phaser.Types.Input.Keyboard.CursorKeys) {
-    if (this.healthState === HealthState.DAMAGE || HealthState.DEAD){
+    if (this.healthState === HealthState.DAMAGE || this.healthState == HealthState.DEAD){
         return
     }
     if (!cursors) {
