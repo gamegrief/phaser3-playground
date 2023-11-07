@@ -6,6 +6,8 @@ import Lizard from "../enemies/Lizard";
 import "../characters/Faune";
 import Faune from "../characters/Faune";
 import { sceneEvents } from "../events/EventCenter";
+import { createChestAnims } from "../anims/TreasureAnims";
+import Chest from "../items/Chest";
 export default class Game extends Phaser.Scene {
   private cursors!: Phaser.Types.Input.Keyboard.CursorKeys;
   private faune!: Faune;
@@ -26,6 +28,7 @@ export default class Game extends Phaser.Scene {
     this.scene.run("game-ui");
     createLizardAnims(this.anims);
     createCharacterAnims(this.anims);
+    createChestAnims(this.anims);
     const map = this.make.tilemap({ key: "dungeon" });
     const tileset = map.addTilesetImage("dungeon", "tiles", 16, 16, 1, 2);
     map.createLayer("Ground", tileset);
@@ -37,6 +40,18 @@ export default class Game extends Phaser.Scene {
 
     wallsLayer.setCollisionByProperty({ collides: true });
 
+    const chests = this.physics.add.staticGroup({
+      classType: Chest,
+    });
+
+    const chestsLayer = map.getObjectLayer("Chests");
+    chestsLayer.objects.forEach((chestObj) => {
+      chests.get(
+        chestObj.x! + chestObj.width! * 0.5,
+        chestObj.y! - chestObj.height! * 0.5,
+        "treasure"
+      );
+    });
     debugDraw(wallsLayer, this);
     this.faune = this.add.faune(128, 128, "faune");
     this.faune.setKnives(this.knives);
@@ -54,8 +69,28 @@ export default class Game extends Phaser.Scene {
     // const lizard = this.physics.add.sprite(256,128, 'lizard', 'lziard_m_idle_anim_f0.png')
     this.physics.add.collider(this.faune, wallsLayer);
     this.physics.add.collider(this.lizards, wallsLayer);
-    this.physics.add.collider(this.knives, wallsLayer, this.handleKnifeWallCollision, undefined, this);
-    this.physics.add.collider(this.knives, this.lizards, this.handleKnifeLizardCollision, undefined, this);
+    this.physics.add.collider(
+      this.faune,
+      chests,
+      this.handlePlayerChestCollision,
+      undefined,
+      this
+    );
+
+    this.physics.add.collider(
+      this.knives,
+      wallsLayer,
+      this.handleKnifeWallCollision,
+      undefined,
+      this
+    );
+    this.physics.add.collider(
+      this.knives,
+      this.lizards,
+      this.handleKnifeLizardCollision,
+      undefined,
+      this
+    );
 
     this.playerLizardsCollider = this.physics.add.collider(
       this.lizards,
@@ -64,6 +99,14 @@ export default class Game extends Phaser.Scene {
       undefined,
       this
     );
+  }
+
+  private handlePlayerChestCollision(
+    obj1: Phaser.GameObjects.GameObject,
+    obj2: Phaser.GameObjects.GameObject
+  ) {
+    const chest = obj2 as Chest
+    this.faune.setChest(chest)
   }
 
   private handleKnifeWallCollision(
@@ -77,7 +120,7 @@ export default class Game extends Phaser.Scene {
     obj2: Phaser.GameObjects.GameObject
   ) {
     this.knives.killAndHide(obj1);
-    this.lizards.killAndHide(obj2)
+    this.lizards.killAndHide(obj2);
   }
 
   private handlePlayerLizardCollission(
