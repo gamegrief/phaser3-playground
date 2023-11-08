@@ -18,6 +18,6 @@ export default class Chest extends Phaser.Physics.Arcade.Sprite {
       return 0;
     }
     this.play("chest-open");
-    return Phaser.Math.Between(50, 200);
+    return Phaser.Math.Between(1000, 2000);
   }
 }
